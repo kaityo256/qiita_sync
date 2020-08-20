@@ -67,7 +67,7 @@ def latest?(article, dir)
 end
 
 def dump_data(article, dir)
-  return if latest?(article, dir)
+  return false if latest?(article, dir)
   filename = dir + "/README.md"
   open(filename, "w") do |f|
     f.puts "# #{article["title"]}"
@@ -75,6 +75,7 @@ def dump_data(article, dir)
     body = qiita2gh(article["body"], dir)
     f.puts body
   end
+  true
 end
 
 dirlist = nil
@@ -82,7 +83,6 @@ dirlist = nil
 # ディレクトリとの対応表
 if File.exist?(DIRLIST)
   # あれば読み込む
-  puts "Found #{DIRLIST}."
   dirlist = YAML.load(File.open(DIRLIST))
   # 欠落をチェック
   data.each do |d|
@@ -105,12 +105,18 @@ else
 end
 
 def sync(data, dirlist)
+  updated = 0
   data.each do |article|
     title = article["title"]
     if dirlist[title]
       dir = dirlist[title]
-      dump_data(article, dir)
+      updated += 1 if dump_data(article, dir)
     end
+  end
+  if updated == 0
+    puts "Nothing to be done."
+  else
+    puts "Updated #{updated} article(s)."
   end
 end
 
