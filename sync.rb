@@ -5,10 +5,31 @@ DIRLIST = "dirlist.yaml"
 
 data = YAML.load(File.open("qiita.yaml"))
 
+
 def qiita2gh(body, dir)
   str = ""
   image_files = 0
+  in_math = false
   body.split(/\R/) do |line|
+    if in_math
+      if line=~/```/
+        str = str + "$$\n"
+        in_math = false
+      elsif line=~/\\begin{align}/
+        str = str + "\\begin{aligned}\n"
+      elsif line=~/\\end{align}/
+        str = str + "\\end{aligned}\n"
+      else
+        str = str + line + "\n"
+      end
+      next
+    end
+    if line=~/```math/
+      in_math = true
+      str = str + "$$\n"
+      next
+    end
+
     if line =~/^#+(\s+.*)/
       line = "##" + $1
     elsif line=~/.*(https:\/\/qiita-image-store.*)\)/
