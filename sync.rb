@@ -1,15 +1,15 @@
 # coding: utf-8
 require 'yaml'
 require 'open-uri'
+DIRLIST = "dirlist.yaml"
 
 data = YAML.load(File.open("qiita.yaml"))
-dirlist = YAML.load(File.open("dirlist.yaml"))
 
 def qiita2gh(body, dir)
   str = ""
   image_files = 0
   body.split(/\R/) do |line|
-    if line =~/#(.*)/
+    if line =~/^#+(\s+.*)/
       line = "##" + $1
     elsif line=~/.*(https:\/\/qiita-image-store.*)\)/
       url = $1
@@ -25,6 +25,8 @@ def qiita2gh(body, dir)
         end
       end
       line = "![#{local_file}](#{local_file})"
+    elsif line=~/```(.*):.*/
+      line = "```" + $1
     end
     str = str + line + "\n"
   end
@@ -54,11 +56,41 @@ def dump_data(article, dir)
   end
 end
 
+dirlist = nil
 
-data.each do |d|
-  title = d["title"]
-  if dirlist.has_key?(title)
-    dir = dirlist[title]
-    dump_data(d, dir)
+# ディレクトリとの対応表
+if File.exist?(DIRLIST)
+  # あれば読み込む
+  puts "Found #{DIRLIST}."
+  dirlist = YAML.load(File.open(DIRLIST))
+  # 欠落をチェック
+  data.each do |d|
+    title = d["title"]
+    if !dirlist.has_key?(title)
+      puts "New article: #{title}"
+      dirlist[title] = nil
+    end
+  end
+  YAML.dump(dirlist, File.open(DIRLIST, "w"))
+else
+  # なければ作る
+  dirlist = {}
+  data.each do |d|
+    title = d["title"]
+    dirlist[title] = nil
+  end
+  YAML.dump(dirlist, File.open(DIRLIST, "w"))
+  puts "#{DIRLIST} is not found. Created it."
+end
+
+def sync(data, dirlist)
+  data.each do |article|
+    title = article["title"]
+    if dirlist[title]
+      dir = dirlist[title]
+      dump_data(article, dir)
+    end
   end
 end
+
+sync(data, dirlist)
