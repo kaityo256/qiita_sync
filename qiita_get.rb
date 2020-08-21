@@ -42,6 +42,7 @@ def get_page(page, data)
     h["url"] = item["url"]
     h["body"] = item["body"]
     h["updated_at"] = item["updated_at"]
+    h["created_at"] = item["crated_at"]
     puts h["title"]
     data.push h
   end
