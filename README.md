@@ -2,10 +2,12 @@
 
 ## 概要
 
-Qiitaに投稿した記事を、GitHub用にダウンロードしてSyncします。Qiitaからデータを取ってくるスクリプトと、取ってきたデータを見てローカルデータを更新するスクリプトの２つがあります。
+Qiitaに投稿した記事を、GitHub用にダウンロードしてSyncします。Qiitaからデータを取ってくるスクリプトと、取ってきたデータを見てローカルデータを更新するスクリプトの2つがあります。
 
 * `qiita_get.rb` Qiitaからデータを取ってくるRubyスクリプトです。Qiitaのユーザ名を`QIITA?USER`、アクセストークンを`QIITA_TOKEN`という名前の環境変数で与えておく必要があります。実行すると、`qiita.yaml`というファイルを作ります。また、デバッグ用に`qiita?.json`というファイルも吐きます。
 * `sync.rb` `qiita.yaml`、`dirlist.yaml`を参照し、ローカルファイルの更新をします。
+
+QiitaからGit管理されたリポジトリにダウンロードし、GitHubに上げる使い方を想定しています。使用例は[こんな感じ](https://github.com/kaityo256/qiita)です。
 
 ## 使い方
 
@@ -26,7 +28,7 @@ cd qiita
 ruby qiita_get.rb
 ```
 
-すると、Qiitaの「全データ」が`qiita.yaml`というファイルに保存されます。なお、100本以上の記事がある場合は何回かにわけて保存します。QiitaのAPIにクエリを投げ、取得したJSONデータを`qiita?.json`というファイルに保存します。そのうち後で使うデータ(title, body, created_at, updated_at)だけが`qiita.yaml`に保存されています。
+すると、Qiitaにある、QIITA_USERが投稿した全データが`qiita.yaml`というファイルに保存されます。なお、100本以上の記事がある場合は何回かにわけて保存します。QiitaのAPIにクエリを投げ、取得したJSONデータを`qiita?.json`というファイルに保存します。そのうち後で使うデータ(title, body, created_at, updated_at)だけが`qiita.yaml`に保存されています。
 
 次に、syncスクリプトを走らせます。
 
@@ -66,11 +68,13 @@ Updated 1 article(s).
 
 ディレクトリが無ければ作り、あれば`README.md`のタイムスタンプと記事のタイムスタンプを比較し、古ければ上書きします。イメージは「image?.拡張子」という名前でダウンロードします。記事名にディレクトリが指定されていなければ無視されますので、一つ一つ指定しては`sync.rb`を走らせてみると良いと思います。
 
-以後、`qiita_get.rb`、`sync.rb`を実行すれば差分を更新してくれるはずです。
+以後、Qiita側で更新があったら`qiita_get.rb`を実行してから`sync.rb`を実行すれば差分を更新してくれるはずです。
+
+Qiitaの記事をリポジトリで管理するなら、qiita_syncをsubmoduleとして使うと良いかと思います。
 
 ## QiitaのMarkdownからの変換
 
-MarkdownのQiita方言とGitHub方言はやや違います。それらを完全に吸収するわけではないのですが、少しだけ変換して保存します。
+MarkdownのQiita方言とGitHub方言(GitHub Flavored Markdown)はやや違います。それらを完全に吸収するわけではないのですが、少しだけ変換して保存します。
 
 ### 見出しの変換
 
@@ -95,6 +99,24 @@ Qiitaでは
 ```
 
 のように、レベル1でタイトル、残りは一個ずつレベルを下げます。
+
+### コードブロック
+
+Qiitaでは、コードブロックにファイル名を含めることができます。
+
+````md
+```ruby:test.rb
+puts "Hello"
+```
+````
+
+しかし、GitHub Flavored Markdownではファイル名を入れられません。なので、以下の用にファイル名は削除しています。
+
+````md
+```ruby
+puts "Hello"
+```
+````
 
 ### 画像の変換
 
