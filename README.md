@@ -4,14 +4,25 @@
 
 Qiitaに投稿した記事を、GitHub用にダウンロードしてSyncします。Qiitaからデータを取ってくるスクリプトと、取ってきたデータを見てローカルデータを更新するスクリプトの２つがあります。
 
-* `qiita_get.rb` Qiitaからデータを取ってくるRubyスクリプトです。中身の`$USER`をご自身のIDに変えて使ってください。アクセストークンを`QIITA_TOKEN`という名前の環境変数で与えておく必要があります。実行すると、`qiita.yaml`というファイルを作ります。また、デバッグ用に`qiita?.json`というファイルも吐きます。
-* `sync.rb` `qiita.yaml`とローカルファイルの状況を見て、ローカルファイルの更新をします。
+* `qiita_get.rb` Qiitaからデータを取ってくるRubyスクリプトです。Qiitaのユーザ名を`QIITA?USER`、アクセストークンを`QIITA_TOKEN`という名前の環境変数で与えておく必要があります。実行すると、`qiita.yaml`というファイルを作ります。また、デバッグ用に`qiita?.json`というファイルも吐きます。
+* `sync.rb` `qiita.yaml`、`dirlist.yaml`を参照し、ローカルファイルの更新をします。
 
 ## 使い方
 
-まずデータを取ってきます。
+まず、Qiitaのアクセストークンを取得します。[Qiitaの設定のアプリケーション](https://qiita.com/settings/applications)の「個人用アクセストークン」のところで「新しくトークンを発行する」をクリックします。読み込みしかしないので、スコープはread_qiitaだけで良いです。発行したトークンは、その場でしか閲覧できないのでどこかに保存しておきましょう。
+
+次に、環境変数を設定します。Qiitaのユーザ名と、先程取得したアクセストークンを、それぞれ`QIITA_USER`と`QIITA_TOKEN`という名前の環境変数にします。
 
 ```sh
+export QIITA_USER=kaityo256
+export QIITA_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+```
+
+Qiitaのデータを取得したいディレクトリで、`qiita_get.rb`を実行します。
+
+```sh
+mkdir qiita
+cd qiita
 ruby qiita_get.rb
 ```
 
@@ -37,9 +48,11 @@ WindowsのVSCodeで__m256d型のインデックスアクセスにenumを使う�
 ```yaml
 ---
 Pythonでフーリエ変換: python_fft
+822823回マクロを展開するとGCCが死ぬ:
+WindowsのVSCodeで__m256d型のインデックスアクセスにenumを使うと怒られる:
 ```
 
-とします。この状態で`sync.rb`を実行してみます。
+とします。この状態でもう一度`sync.rb`を実行してみます。
 
 ```sh
 $ ruby sync.rb
@@ -55,9 +68,11 @@ Updated 1 article(s).
 
 以後、`qiita_get.rb`、`sync.rb`を実行すれば差分を更新してくれるはずです。
 
-## QiitaとGitHubのMarkdown方言について
+## QiitaのMarkdownからの変換
 
-QiitaとGitHubのMarkdownはやや違います。このスクリプトは、見出しの変換と数式の変換だけします。
+MarkdownのQiita方言とGitHub方言はやや違います。それらを完全に吸収するわけではないのですが、少しだけ変換して保存します。
+
+### 見出しの変換
 
 Qiitaでは
 
@@ -68,7 +83,7 @@ Qiitaでは
 ...
 ```
 
-のように、レベル1の見出しを並べるのが一般的だと思います(多分)。しかしこのままでは、markdownlintが怒るので、
+のように、レベル1の見出しを並べるのが一般的だと思います(多分)。しかしこのままでは、markdownlintが怒るのと、記事のタイトルを入れたいので、
 
 ```md
 # タイトル
@@ -80,6 +95,24 @@ Qiitaでは
 ```
 
 のように、レベル1でタイトル、残りは一個ずつレベルを下げます。
+
+### 画像の変換
+
+Qiitaでは、アップロードされた画像は`amazonaws.com`に保存されますが、その際に
+
+```md
+![sample1.png](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/79744/ee833403-b932-4680-aa1b-3bf37084f40b.png)
+```
+
+のようにMarkdown形式で保存される場合と、
+
+```html
+<img width="229" alt="group1.png" src="https://qiita-image-store.s3.amazonaws.com/0/79744/c98735c4-e967-1fa3-68b9-5a427be5fbf0.png">
+```
+
+のようにimgタグを使う場合があります。imgタグの場合にはサイズが指定されているので、それを保存するか迷ったのですが、ここではどちらもファイルをローカルにダウンロードしてMarkdown形式で保存しています。この際、`image1.png`のように、`image`+連番のファイル名で保存します。
+
+### 数式の変換
 
 数式は、`math`で指定されたものを`$$`に変換します。さらに`\begin{align}`を`\begin{aligned}`に変換します。これは私がVSCodeのプレビューでそっちを使っている都合です。
 
