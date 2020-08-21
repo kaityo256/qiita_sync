@@ -1,51 +1,50 @@
-# coding: utf-8
-require 'yaml'
-require 'open-uri'
-DIRLIST = "dirlist.yaml"
+require "yaml"
+require "open-uri"
+DIRLIST = "dirlist.yaml".freeze
 
-data = YAML.load(File.open("qiita.yaml"))
+data = YAML.safe_load(File.open("qiita.yaml"))
 
 def qiita2gh(body, dir)
   str = ""
   image_index = 0
   in_math = false
-  body.split(/\R/) do |line|
+  body.split(/\R/).each do |line|
     if in_math
-      if line=~/```/
-        str = str + "$$\n"
+      if line =~ /```/
+        str += "$$\n"
         in_math = false
-      elsif line=~/\\begin{align}/
-        str = str + "\\begin{aligned}\n"
-      elsif line=~/\\end{align}/
-        str = str + "\\end{aligned}\n"
+      elsif line =~ /\\begin{align}/
+        str += "\\begin{aligned}\n"
+      elsif line =~ /\\end{align}/
+        str += "\\end{aligned}\n"
       else
         str = str + line + "\n"
       end
       next
     end
-    if line=~/```math/
+    if line =~ /```math/
       in_math = true
-      str = str + "$$\n"
+      str += "$$\n"
       next
     end
 
-    if line =~/^#+(\s+.*)/
-      line = "##" + $1
-    elsif line=~/.*(https:\/\/qiita-image-store.*)[\)\"]/
-      url = $1
+    if line =~ /^#+(\s+.*)/
+      line = "##" + Regexp.last_match(1)
+    elsif line =~ %r{.*(https://qiita-image-store.*)[\)\"]}
+      url = Regexp.last_match(1)
       ext = File.extname(url)
       local_file = "image#{image_index}#{ext}"
       image_file = dir + "/" + local_file
-      image_index +=1
-      open(image_file, 'w') do |f|
+      image_index += 1
+      File.open(image_file, "w") do |f|
         URI.open(url) do |img|
           puts "Download from #{url} to #{image_file}"
-         f.write(img.read)
+          f.write(img.read)
         end
       end
       line = "![#{local_file}](#{local_file})"
-    elsif line=~/```(.*):.*/
-      line = "```" + $1
+    elsif line =~ /```(.*):.*/
+      line = "```" + Regexp.last_match(1)
     end
     str = str + line + "\n"
   end
@@ -53,23 +52,26 @@ def qiita2gh(body, dir)
 end
 
 def latest?(article, dir)
-  if !File.directory?(dir)
+  unless File.directory?(dir)
     puts "Create direcotry #{dir}"
     Dir.mkdir(dir)
     return false
   end
   filename = dir + "/README.md"
+  return false unless File.exist?(filename)
+
   file_date = File::Stat.new(filename).mtime
   article_date = Time.iso8601(article["updated_at"])
-  return file_date > article_date
+  file_date > article_date
 end
 
 def dump_data(article, dir)
   return false if latest?(article, dir)
+
   filename = dir + "/README.md"
-  open(filename, "w") do |f|
-    f.puts "# #{article["title"]}"
-    f.puts 
+  File.open(filename, "w") do |f|
+    f.puts "# #{article['title']}"
+    f.puts
     body = qiita2gh(article["body"], dir)
     f.puts body
   end
@@ -81,11 +83,11 @@ dirlist = nil
 # ディレクトリとの対応表
 if File.exist?(DIRLIST)
   # あれば読み込む
-  dirlist = YAML.load(File.open(DIRLIST))
+  dirlist = YAML.safe_load(File.open(DIRLIST))
   # 欠落をチェック
   data.each do |d|
     title = d["title"]
-    if !dirlist.has_key?(title)
+    unless dirlist.key?(title)
       puts "New article: #{title}"
       dirlist[title] = nil
     end
@@ -111,7 +113,7 @@ def sync(data, dirlist)
       updated += 1 if dump_data(article, dir)
     end
   end
-  if updated == 0
+  if updated.zero?
     puts "Nothing to be done."
   else
     puts "Updated #{updated} article(s)."
