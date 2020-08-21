@@ -5,10 +5,9 @@ DIRLIST = "dirlist.yaml"
 
 data = YAML.load(File.open("qiita.yaml"))
 
-
 def qiita2gh(body, dir)
   str = ""
-  image_files = 0
+  image_index = 0
   in_math = false
   body.split(/\R/) do |line|
     if in_math
@@ -32,13 +31,12 @@ def qiita2gh(body, dir)
 
     if line =~/^#+(\s+.*)/
       line = "##" + $1
-    elsif line=~/.*(https:\/\/qiita-image-store.*)\)/
+    elsif line=~/.*(https:\/\/qiita-image-store.*)[\)\"]/
       url = $1
       ext = File.extname(url)
-      puts url, ext
-      local_file = "image#{image_files}#{ext}"
+      local_file = "image#{image_index}#{ext}"
       image_file = dir + "/" + local_file
-      image_files +=1
+      image_index +=1
       open(image_file, 'w') do |f|
         URI.open(url) do |img|
           puts "Download from #{url} to #{image_file}"
