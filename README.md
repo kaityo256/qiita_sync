@@ -18,7 +18,7 @@ export QIITA_USER=kaityo256
 export QIITA_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
-Qiitaのデータを取得したいディレクトリで、`qiita_get.rb`を実行します。
+2つの環境変数を設定した状態で、Qiitaのデータを取得したいディレクトリにて`qiita_get.rb`を実行します。
 
 ```sh
 mkdir qiita
@@ -26,7 +26,7 @@ cd qiita
 ruby qiita_get.rb
 ```
 
-すると、Qiitaの「全データ」が`qiita.yaml`というファイルに保存されます。なお、100本以上の記事がある場合は何回かにわけて保存します。保存のたびに受け取ったデータを`qiita?.json`というファイルに保存します。
+すると、Qiitaの「全データ」が`qiita.yaml`というファイルに保存されます。なお、100本以上の記事がある場合は何回かにわけて保存します。QiitaのAPIにクエリを投げ、取得したJSONデータを`qiita?.json`というファイルに保存します。そのうち後で使うデータ(title, body, created_at, updated_at)だけが`qiita.yaml`に保存されています。
 
 次に、syncスクリプトを走らせます。
 
