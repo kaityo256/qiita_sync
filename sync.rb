@@ -82,13 +82,22 @@ def check_dirlist(data)
   else
     puts "#{DIRLIST} is not found. Created it."
   end
+  created = {}
   data.each do |d|
     title = d["title"]
+    created[title] = d["created_at"]
     unless dirlist.key?(title)
       puts "New article: #{title}"
       dirlist[title] = nil
     end
   end
+  keys = dirlist.keys
+  keys.sort! { |a, b| created[b] <=> created[a] }
+  sorted_dirlist = []
+  keys.each do |title|
+    sorted_dirlist.push [title, dirlist[title]]
+  end
+  dirlist = sorted_dirlist.to_h
   YAML.dump(dirlist, File.open(DIRLIST, "w"))
   dirlist
 end
