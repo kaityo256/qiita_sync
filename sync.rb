@@ -1,8 +1,5 @@
 require "yaml"
 require "open-uri"
-DIRLIST = "dirlist.yaml".freeze
-
-data = YAML.safe_load(File.open("qiita.yaml"))
 
 def qiita2gh(body, dir)
   str = ""
@@ -78,13 +75,13 @@ def dump_data(article, dir)
   true
 end
 
-dirlist = nil
-
-# ディレクトリとの対応表
-if File.exist?(DIRLIST)
-  # あれば読み込む
-  dirlist = YAML.safe_load(File.open(DIRLIST))
-  # 欠落をチェック
+def check_dirlist(data)
+  dirlist = {}
+  if File.exist?(DIRLIST)
+    dirlist = YAML.safe_load(File.open(DIRLIST))
+  else
+    puts "#{DIRLIST} is not found. Created it."
+  end
   data.each do |d|
     title = d["title"]
     unless dirlist.key?(title)
@@ -93,15 +90,7 @@ if File.exist?(DIRLIST)
     end
   end
   YAML.dump(dirlist, File.open(DIRLIST, "w"))
-else
-  # なければ作る
-  dirlist = {}
-  data.each do |d|
-    title = d["title"]
-    dirlist[title] = nil
-  end
-  YAML.dump(dirlist, File.open(DIRLIST, "w"))
-  puts "#{DIRLIST} is not found. Created it."
+  dirlist
 end
 
 def sync(data, dirlist)
@@ -120,4 +109,7 @@ def sync(data, dirlist)
   end
 end
 
+DIRLIST = "dirlist.yaml".freeze
+data = YAML.safe_load(File.open("qiita.yaml"))
+dirlist = check_dirlist(data)
 sync(data, dirlist)
