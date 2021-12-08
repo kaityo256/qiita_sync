@@ -4,7 +4,7 @@
 
 Qiitaに投稿した記事を、GitHub用にダウンロードしてSyncします。Qiitaからデータを取ってくるスクリプトと、取ってきたデータを見てローカルデータを更新するスクリプトの２つがあります。
 
-* `qiita_get.rb` Qiitaからデータを取ってくるRubyスクリプトです。Qiitaのユーザ名を`QIITA?USER`、アクセストークンを`QIITA_TOKEN`という名前の環境変数で与えておく必要があります。実行すると、`qiita.yaml`というファイルを作ります。また、デバッグ用に`qiita?.json`というファイルも吐きます。
+* `qiita_get.rb` Qiitaからデータを取ってくるRubyスクリプトです。Qiitaのユーザ名を`QIITA_USER`、アクセストークンを`QIITA_TOKEN`という名前の環境変数で与えておく必要があります。実行すると、`qiita.yaml`というファイルを作ります。また、デバッグ用に`qiita?.json`というファイルも吐きます。
 * `sync.rb` `qiita.yaml`、`dirlist.yaml`を参照し、ローカルファイルの更新をします。
 
 ## 使い方
