@@ -10,13 +10,18 @@ class QiitaGetter
   ITEMS_URI = "https://qiita.com/api/v2/items".freeze
 
   def self.article(item)
-    puts item["title"]
+    #puts item["title"]
     h = {}
     h["title"] = item["title"]
     h["url"] = item["url"]
     h["body"] = item["body"]
     h["updated_at"] = item["updated_at"]
     h["created_at"] = item["created_at"]
+    tags = []
+    item["tags"].each do|item|
+      tags.append item['name']
+    end
+    h['tags'] = tags.join(",")
     h
   end
 
